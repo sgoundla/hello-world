@@ -1,0 +1,230 @@
+
+#A sample manifest (template) to use with puppet
+#puppet files have the name format like "name.pp"
+#puppet relies on "manifests", where we specify which code/resources should be applied to each client)
+# think of manifests as the puppet codes (catalogue is a compilation of manifests and thus it 
+# defines the desired state of the 
+#system/computer how u want it to look like at the end). Puppet ensures all those conditions 
+#fulfilled, provided
+#all the resources listed in manifest/catlogue are available. If not, it tries to get/install them
+#if possible
+#tutorials
+#http://bitfieldconsulting.com/puppet-tutorial-2
+
+
+# we use "puppet apply" only when the master/agent are on the same system. But for the 
+#server/client environment we use "puppet" through catalogue
+
+# simplyt put, "puppet" works in two stages:
+# 1. prepare catalogues
+# 2. Apply catalogues
+# (Remember, agents only see "catalogues" not the individual manifests)!
+
+class servicename {
+ centos, redhat => 'ntpd'
+ debian, ubuntu => 'ntp'
+}
+
+class ntp {
+
+	pakcage { "ntp" :
+
+	ensure  => installed
+	}
+
+	service { "$servicename" :
+	ensure  => running
+	}
+}
+
+
+
+node whiteboard.cisco.com {
+	include ntp
+	}
+
+
+Another example of manifest to add a new user 'Smit':
+
+#/root/examples/add_user.pp
+
+   user {'smit' :
+	ensure	=> present,
+	uid	=> 501,
+	gid	=> team,
+	home	=> /home/smit ,
+	shell 	=> /bin/bash , 
+	}
+
+
+
+To execute this manifest:
+
+
+
+#puppet apply /root/example/add_user.pp
+
+
+To remove user, write another manifest:
+
+#/root/examples/delete_user.pp
+
+	user {'smit' :
+		ensure	=> absent,
+		}
+
+#puppet apply /root/examples/delete_user.pp
+
+
+
+
+Using the "resource" subcommand:
+
+
+#puppet resource <TYPE> [<NAME>] [ATTRIBUTE=VALUE ...]
+
+example
+
+#puppet resource user root
+
+user { 'root':
+  ensure           => 'present',
+  comment          => 'root',
+  gid              => '0',
+  groups           => ['root', 'bin', 'daemon', 'sys', 'adm', 'disk', 'wheel'],
+  home             => '/root',
+  password         => '$1$jrm5tnjw$h8JJ9mCZLmJvIxvDLjw1M/',
+  password_max_age => '99999',
+  password_min_age => '0',
+  shell            => '/bin/bash',
+  uid              => '0',
+}
+
+
+Resource declaration example through a manifest:
+
+#/root/examples/test_file.pp
+
+	file { 'testfile' :
+	ensure	=> present ,
+	path	=> '/tmp/testfile',
+	mode	=> 0640 ,
+	content	=> "This is a testfile.",
+	}
+
+Another example with multi resource/types
+
+
+#/root/examples/file_2.pp
+
+	file {'/tmp/test1' :
+	ensure 	=> file ,
+	content	=> "Hi. \n" ,
+	}
+
+	file { '/tmp/test2' :
+	ensure 	=> directory ,
+	mode	=> 0644 ,
+	}
+
+	file { '/tmp/test3' :
+	ensure	=> link ,
+	target	=> '/tmp/test1',
+	}
+
+	user {'smit' :
+	ensure 	=> absent,
+	}
+
+	notify {"I am notifying you. ":}
+	
+
+
+	
+Since agents only see catalogues, and they can only 
+retrieve their own 	catalogue, it is possible to "simulate" catalogue run.
+
+#puppet agent --test --noop
+
+we can even use special "diff" tools to compare & differentiate 2 catalogues
+
+ 
+	
+Relationships:
+
+(of Resources)
+
+
+See the example below:
+
+	file {'/tmp/test1':
+		ensure 	=> file,
+		content	=> "Hi."
+	}
+
+	notify {'after':
+		message	=> '/tmp/test1 has already been synced '
+		}
+
+	The relationship can be declared by using -> or	~> arrows, like:
+
+file {'/tmp/test1':
+		ensure 	=> file,
+		content	=> "Hi."
+	}
+
+	->
+
+	notify {'after':
+		message	=> '/tmp/test1 has already been synced '
+		}
+ 
+
+which can also be stated in much simpler fashion:
+
+
+	File ['/tmp/test1'] 	->  Notify ['after']
+
+	(note the Uppercase reference to resource & square brackets).
+
+
+
+#Package/file/service pattern (the most important one in Puppet)
+
+
+	package {'openssh server' :	
+		ensure	=>	present,
+		before	=>	File['/etc/ssh/sshd_config'],
+		}
+
+	file {'/etc/ssh/sshd_config':
+		ensure	=>	file,
+		mode	=>	600,
+		source	=>	'/root/examples/sshd_config'
+		}
+
+	service {'sshd':
+	ensure		=> running,
+	enable		=> true,
+	subscribe	=> File ['/etc/ssh/sshd_config']
+	}
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

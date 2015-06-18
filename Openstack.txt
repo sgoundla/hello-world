@@ -1,0 +1,10 @@
+
+Openstack
+
+http://docs.openstack.org/icehouse/training-guides/content/bk_associate-training-guide.html
+
+
+http://docs.openstack.org/ops/oreilly-openstack-ops-guide.pdf
+
+https://www.youtube.com/watch?v=HBgcFlV8m4Q&index=1&list=PLtgPDeBpcq2EKCCjIe8RkQdleKqkhheVy
+
